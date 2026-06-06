@@ -34,4 +34,3 @@ Thumbs.db
 
 # Prisma
 .prisma/
-prisma/migrations/

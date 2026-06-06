@@ -12,3 +12,145 @@ datasource db {
   provider = "postgresql"
 }
 
+// ── ENUMS ──────────────────────────────────────
+
+enum Role {
+  STUDENT
+  OFFICER
+}
+
+enum DriveStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum JobType {
+  ON_SITE
+  REMOTE
+  HYBRID
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  TECHNICAL
+  HR
+  OFFER_MADE
+  OFFER_ACCEPTED
+  OFFER_REJECTED
+  REJECTED
+  WITHDRAWN
+}
+
+// ── MODELS ─────────────────────────────────────
+
+model User {
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  password           String
+  role               Role
+  mustChangePassword Boolean  @default(true) @map("must_change_password")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  student           Student?
+  officer           Officer?
+  applicationEvents ApplicationEvent[]
+
+  @@map("users")
+}
+
+model Student {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  name           String
+  rollNo         String   @unique @map("roll_no")
+  branch         String
+  year           Int
+  cgpa           Float
+  activeBacklogs Int      @default(0) @map("active_backlogs")
+  phone          String?
+  isPlaced       Boolean  @default(false) @map("is_placed")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@map("students")
+}
+
+model Officer {
+  id         String @id @default(uuid())
+  userId     String @unique @map("user_id")
+  name       String
+  employeeId String @unique @map("employee_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("officers")
+}
+
+model Drive {
+  id              String      @id @default(uuid())
+  companyName     String      @map("company_name")
+  roleName        String      @map("role_name")
+  ctcMin          Float       @map("ctc_min")
+  ctcMax          Float       @map("ctc_max")
+  location        String
+  jobType         JobType     @map("job_type")
+  description     String      @db.Text
+  status          DriveStatus @default(ACTIVE)
+
+  minCgpa         Float    @map("min_cgpa")
+  allowedBranches String[] @map("allowed_branches")
+  maxBacklogs     Int      @map("max_backlogs")
+  allowedYears    Int[]    @map("allowed_years")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  applications Application[]
+
+  @@map("drives")
+}
+
+model Application {
+  id            String            @id @default(uuid())
+  studentId     String            @map("student_id")
+  driveId       String            @map("drive_id")
+  resumeUrl     String            @map("resume_url")
+  currentStatus ApplicationStatus @default(APPLIED) @map("current_status")
+  appliedAt     DateTime          @default(now()) @map("applied_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  student Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  drive   Drive              @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  events  ApplicationEvent[]
+
+  @@unique([studentId, driveId])
+  @@map("applications")
+}
+
+model ApplicationEvent {
+  id            String            @id @default(uuid())
+  applicationId String            @map("application_id")
+  fromStatus    ApplicationStatus @map("from_status")
+  toStatus      ApplicationStatus @map("to_status")
+  changedById   String            @map("changed_by_id")
+  note          String?
+  changedAt     DateTime          @default(now()) @map("changed_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedBy   User        @relation(fields: [changedById], references: [id])
+
+  @@map("application_events")
+}
+
+model PlacementPolicy {
+  id           String   @id @default(uuid())
+  oneOfferLock Boolean  @default(true) @map("one_offer_lock")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("placement_policy")
+}
