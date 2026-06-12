@@ -1,4 +1,4 @@
-import { prisma } from "../utils/prisma.js";    
+import prisma from "../utils/prisma.js";    
 import { AppError } from "../utils/AppError.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -55,4 +55,20 @@ export async function loginUser(email,password) {
     }
 
     return { token, user: userOut };
+}
+
+
+export async function changePassword(userId, newPassword) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError('User not found', 404);
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      password: hashed,
+      mustChangePassword: false,
+    },
+  });
 }

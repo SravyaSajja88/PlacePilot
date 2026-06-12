@@ -21,10 +21,18 @@ export async function login (req,res,next) {
                 user: result.user,
             },
             });
-        
-        res.json({ success: true, user });
     }
     catch(err) {
         next(err);
     }
+}
+
+export async function changePassword(req, res, next) {
+  try {
+    const { newPassword } = req.body;
+    await authService.changePassword(req.user.userId, newPassword);
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    next(err);
+  }
 }
