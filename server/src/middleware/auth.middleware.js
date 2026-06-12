@@ -18,3 +18,12 @@ export function authenticate(req,res,next) {
     }
     
 }
+
+export function authorizeRoles(...roles) {
+  return (req, res, next) => {
+    if (!roles.includes(req.user?.role)) {
+      return next(new AppError('Forbidden: insufficient permissions', 403));
+    }
+    next();
+  };
+}
