@@ -146,6 +146,5 @@ The backend enforces student eligibility server-side ([eligibility.service.js](f
 ## Security Measures
 
 - **HTTP-Only Cookies:** Tokens are stored in HttpOnly cookies, protecting the application from Cross-Site Scripting (XSS) extraction.
-- **Request Throttling:** Throttles rapid API requests using `express-rate-limit` to prevent brute force and DDoS attacks.
 - **Input Sanitization:** Uses `express-validator` to sanitize all incoming forms, preventing SQL injection or script insertion.
 - **Audit Trails:** The system logs every stage transition with a record of the initiator, timestamps, and optional comments, enabling administrative audits.
